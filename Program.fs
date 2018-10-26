@@ -2,28 +2,48 @@
 
 open System
 
-let add a b = a + b
-let multiply a b = a * b
+type Token =
+    | Add
+    | Subtract
+    | Multiply
+    | Divide
+    | Number of float
 
-let product = List.fold multiply 1.0
-let sum = List.fold add 0.0
+let isNumeric (number: string) = Double.TryParse(number) |> fst
 
-let rec askForFloat prompt = 
-    printf prompt
-    let textInput = Console.ReadLine()
-    if textInput = "n" then None else
-        match Double.TryParse(textInput) with
-        | true, value -> Some value
-        | false, _ -> printfn "I understand things like '1.0', '2.4' and '2', however I don't understand '%s'" textInput
-                      askForFloat prompt
+let reverseList items =
+     let rec reverse forward reversed =
+         match forward with
+         | x :: xs -> reverse xs (x :: reversed)
+         | [] -> reversed
+     reverse items []
 
-let rec askUserForNumbers numbersSoFar = 
-    match askForFloat "Please enter a number (or 'n' if finished): " with
-    | Some value -> askUserForNumbers (value :: numbersSoFar)
-    | None -> numbersSoFar
+let parseCalculation (calculation: string) =
+    let rec parse (rest: string []) (tokens: Token list) =
+        let parseRest token = parse (rest |> Array.tail) (token :: tokens)
+
+        match rest with
+        | [||] -> tokens
+        | items ->
+            match items |> Array.head with
+            | "+" -> parseRest Add 
+            | "-" -> parseRest Subtract
+            | "*" -> parseRest Multiply
+            | "/" -> parseRest Divide
+            | number when number |> isNumeric ->
+                parseRest (Number (float number))
+            | _ -> tokens
+    
+    let tokens =
+        calculation.Split [|' '|]
+        |> Array.filter (fun item -> item.Length <> 0)
+
+    (parse tokens []) |> reverseList
 
 [<EntryPoint>]
 let main argv =
-    let numbers = askUserForNumbers []
-    printfn "Sum of %A is %f" numbers (sum numbers)
+    printf "Calc> "
+    let input = Console.ReadLine()
+    let stack = parseCalculation input
+    printfn "Tokens are: %A" (stack)
     0 // return an integer exit code
