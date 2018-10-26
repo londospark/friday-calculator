@@ -40,10 +40,21 @@ let parseCalculation (calculation: string) =
 
     (parse tokens []) |> reverseList
 
+let rec evaluate (tokens: Token list) : float =
+    match tokens with
+    | [Number num] -> num
+    | Number a :: Number b :: Add :: xs -> evaluate ((Number <| a + b) :: xs)
+    | Number a :: Number b :: Subtract :: xs -> evaluate ((Number <| a - b) :: xs)
+    | Number a :: Number b :: Multiply :: xs -> evaluate ((Number <| a * b) :: xs)
+    | Number a :: Number b :: Divide :: xs -> evaluate ((Number <| a / b) :: xs)
+    | _ -> 0.0
+
 [<EntryPoint>]
 let main argv =
     printf "Calc> "
     let input = Console.ReadLine()
     let stack = parseCalculation input
-    printfn "Tokens are: %A" (stack)
+    let result = evaluate stack
+    printfn "Tokens are: %A" stack
+    printfn "Result is: %f" result
     0 // return an integer exit code
