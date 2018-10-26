@@ -290,8 +290,8 @@ paket-files/
 
 
 ### VisualStudioCode ###
-.vscode/*
-!.vscode/settings.json
+#.vscode/*
+#!.vscode/settings.json
 
 
 
